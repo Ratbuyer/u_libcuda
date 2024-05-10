@@ -68,7 +68,7 @@ __global__ void tensor_core_work(int *result)
 
   asm volatile("wgmma.fence.sync.aligned; \n");
 
-  for (int i = 0; i < iteration * 3; i++)
+  for (int i = 0; i < 100; i++)
   {
     asm volatile("wgmma.mma_async.sync.aligned.m64n8k16.f16.f16.f16 "
                  "{%0, %1}, "
