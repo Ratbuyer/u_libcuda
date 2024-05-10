@@ -199,5 +199,21 @@ int main()
 
   printf("Result: %d\n", h_result);
 
+  // overlap
+
+  timer.start_timer();
+
+  overlap<<<blocks, threads_per_block>>>(d_result);
+
+  timer.stop_timer();
+
+  cuda_check_error();
+
+  printf("Overlap time: %f\n", timer.get_time());
+
+  cudaMemcpy(&h_result, d_result, sizeof(int), cudaMemcpyDeviceToHost);
+
+  printf("Result: %d\n", h_result);
+
   return 0;
 }
