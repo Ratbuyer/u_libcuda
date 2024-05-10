@@ -91,15 +91,17 @@ __global__ void work(half *A, half *B, half *C, u_int32_t *metadata_array)
   //              : "l"(desc_a), "l"(desc_b)
   //              );
 
-  asm volatile("wgmma.mma_async.sp.sync.aligned.m64n8k32.f16.f16.f16 "
+  uint32_t a;
+
+  asm volatile("wgmma.mma_async.sync.sp.aligned.m64n8k64.f16.f16.f16 "
                "{%0, %1}, "
                 "%2, %3, "
-                "0, 0, "
+                "%4, %4,"
                 "0, "
                 "1, 1, "
                 "0, 0;"
                : "+r"(c[0]), "+r"(c[1])
-               : "l"(desc_a), "l"(desc_b)
+               : "l"(desc_a), "l"(desc_b), "n"(0)
                );
 
   asm volatile("wgmma.commit_group.sync.aligned; \n");
