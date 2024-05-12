@@ -27,13 +27,6 @@ __global__ void cuda_core_work(int *result)
     sum = fma(1.1f, 1.1f, sum);
     sum = fma(1.2f, 1.2f, sum);
     sum = fma(1.3f, 1.3f, sum);
-    sum = fma(1.4f, 1.4f, sum);
-    sum = fma(1.5f, 1.5f, sum);
-    sum = fma(1.6f, 1.6f, sum);
-    sum = fma(1.7f, 1.7f, sum);
-    sum = fma(1.8f, 1.8f, sum);
-    sum = fma(1.9f, 1.9f, sum);
-    sum = fma(1.0f, 1.0f, sum);
   }
 
   result[0] = sum;
@@ -55,7 +48,7 @@ __global__ void tensor_core_work(int *result)
 
   asm volatile("wgmma.fence.sync.aligned; \n");
 
-  for (int i = 0; i < iteration * 3; i++)
+  for (int i = 0; i < iteration; i++)
   {
     asm volatile("wgmma.mma_async.sync.aligned.m64n8k16.f16.f16.f16 "
                  "{%0, %1}, "
@@ -114,13 +107,6 @@ __global__ void overlap(int *result)
     sum = fma(1.1f, 1.1f, sum);
     sum = fma(1.2f, 1.2f, sum);
     sum = fma(1.3f, 1.3f, sum);
-    sum = fma(1.4f, 1.4f, sum);
-    sum = fma(1.5f, 1.5f, sum);
-    sum = fma(1.6f, 1.6f, sum);
-    sum = fma(1.7f, 1.7f, sum);
-    sum = fma(1.8f, 1.8f, sum);
-    sum = fma(1.9f, 1.9f, sum);
-    sum = fma(1.0f, 1.0f, sum);
   }
 
   asm volatile("wgmma.wait_group.sync.aligned 0; \n");
