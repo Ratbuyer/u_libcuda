@@ -85,6 +85,18 @@ __global__ void work(half *A, half *B, half *C)
 
   asm volatile("wgmma.commit_group.sync.aligned; \n");
 
+  asm volatile("wgmma.mma_async.sync.aligned.m64n8k16.f16.f16.f16 "
+               "{%0, %1}, "
+                "%2, %3, "
+                "1, "
+                "1, 1, "
+                "0, 1;"
+               : "+r"(c[0]), "+r"(c[1])
+               : "l"(desc_a), "l"(desc_b)
+               );
+
+  asm volatile("wgmma.commit_group.sync.aligned; \n");
+
   asm volatile("wgmma.wait_group.sync.aligned 0; \n");
 
   __syncthreads();
