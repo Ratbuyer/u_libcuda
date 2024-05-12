@@ -162,6 +162,51 @@ __global__ void overlap_v1(int *result)
   result[0] += reinterpret_cast<int &>(sum);
 }
 
+__global__ void overlap_v3(int *result)
+{
+  const int M = 64;
+  const int N = 8;
+  const int K = 16;
+
+  __align__(16) __shared__ half A_shared[M * K];
+  __align__(16) __shared__ half B_shared[K * N];
+
+  GmmaDescriptor desc_a = make_desc_a(A_shared);
+  GmmaDescriptor desc_b = make_desc_b(B_shared);
+
+  int c[2] = {};
+
+  float sum = 0;
+
+  asm volatile("wgmma.fence.sync.aligned; \n");
+
+  for (int i = 0; i < iteration; i++)
+  {
+    asm volatile("wgmma.mma_async.sync.aligned.m64n8k16.f16.f16.f16 "
+                 "{%0, %1}, "
+                 "%2, %3, "
+                 "1, "
+                 "1, 1, "
+                 "0, 0;"
+                 : "+r"(c[0]), "+r"(c[1])
+                 : "l"(desc_a), "l"(desc_b));
+
+    asm volatile("wgmma.commit_group.sync.aligned; \n");
+
+    sum = fma(1.0f, 1.0f, sum);
+    sum = fma(1.1f, 1.1f, sum);
+    sum = fma(1.2f, 1.2f, sum);
+    sum = fma(1.3f, 1.3f, sum);
+  }
+
+  asm volatile("wgmma.wait_group.sync.aligned 0; \n");
+
+  asm volatile("wgmma.fence.sync.aligned; \n");
+
+  result[0] = c[0] + c[1];
+  result[0] += reinterpret_cast<int &>(sum);
+}
+
 int main()
 {
 
@@ -216,7 +261,7 @@ int main()
 
   printf("Result: %d\n", h_result);
 
-  // overlap
+  // overlap 2
 
   timer.start_timer();
 
@@ -231,6 +276,8 @@ int main()
   cudaMemcpy(&h_result, d_result, sizeof(int), cudaMemcpyDeviceToHost);
 
   printf("Result: %d\n", h_result);
+
+  // overlap 3
 
   return 0;
 }
