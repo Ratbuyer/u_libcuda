@@ -180,8 +180,17 @@ __global__ void overlap_v3(int *result)
 
   asm volatile("wgmma.fence.sync.aligned; \n");
 
-  for (int i = 0; i < iteration; i++)
+  for (int i = 0; i < iteration / 2; i++)
   {
+    asm volatile("wgmma.mma_async.sync.aligned.m64n8k16.f16.f16.f16 "
+                 "{%0, %1}, "
+                 "%2, %3, "
+                 "1, "
+                 "1, 1, "
+                 "0, 0;"
+                 : "+r"(c[0]), "+r"(c[1])
+                 : "l"(desc_a), "l"(desc_b));
+
     asm volatile("wgmma.mma_async.sync.aligned.m64n8k16.f16.f16.f16 "
                  "{%0, %1}, "
                  "%2, %3, "
@@ -193,6 +202,10 @@ __global__ void overlap_v3(int *result)
 
     asm volatile("wgmma.commit_group.sync.aligned; \n");
 
+    sum = fma(1.0f, 1.0f, sum);
+    sum = fma(1.1f, 1.1f, sum);
+    sum = fma(1.2f, 1.2f, sum);
+    sum = fma(1.3f, 1.3f, sum);
     sum = fma(1.0f, 1.0f, sum);
     sum = fma(1.1f, 1.1f, sum);
     sum = fma(1.2f, 1.2f, sum);
@@ -255,7 +268,7 @@ int main()
 
   cuda_check_error();
 
-  printf("Overlap time: %f\n", timer.get_time());
+  printf("Overlap time v1: %f\n", timer.get_time());
 
   cudaMemcpy(&h_result, d_result, sizeof(int), cudaMemcpyDeviceToHost);
 
@@ -271,13 +284,27 @@ int main()
 
   cuda_check_error();
 
-  printf("Overlap time: %f\n", timer.get_time());
+  printf("Overlap time v2: %f\n", timer.get_time());
 
   cudaMemcpy(&h_result, d_result, sizeof(int), cudaMemcpyDeviceToHost);
 
   printf("Result: %d\n", h_result);
 
   // overlap 3
+
+  timer.start_timer();
+
+  overlap_v3<<<blocks, threads_per_block>>>(d_result);
+
+  timer.stop_timer();
+
+  cuda_check_error();
+
+  printf("Overlap time v3: %f\n", timer.get_time());
+
+  cudaMemcpy(&h_result, d_result, sizeof(int), cudaMemcpyDeviceToHost);
+
+  printf("Result: %d\n", h_result);
 
   return 0;
 }
