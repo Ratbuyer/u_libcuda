@@ -100,18 +100,18 @@ __global__ void overlap(int *result)
   __align__(16) __shared__ half A_shared[M * K];
   __align__(16) __shared__ half B_shared[K * N];
 
-  if (threadIdx.x == 0)
-  {
-    for (int i = 0; i < M * K; i++)
-    {
-      A_shared[i] = 0.01f;
-    }
+  // if (threadIdx.x == 0)
+  // {
+  //   for (int i = 0; i < M * K; i++)
+  //   {
+  //     A_shared[i] = 0.01f;
+  //   }
 
-    for (int i = 0; i < K * N; i++)
-    {
-      B_shared[i] = 0.01f;
-    }
-  }
+  //   for (int i = 0; i < K * N; i++)
+  //   {
+  //     B_shared[i] = 0.01f;
+  //   }
+  // }
 
   GmmaDescriptor desc_a = make_desc_a(A_shared);
   GmmaDescriptor desc_b = make_desc_b(B_shared);
