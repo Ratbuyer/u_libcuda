@@ -69,8 +69,6 @@ __global__ void work(half *A, half *B, half *C)
 
   uint32_t c[2] = {};
 
-  long long a;
-
   asm volatile("wgmma.fence.sync.aligned; \n");
 
   // wgmma.mma_async.sync.aligned.shape.dtype.f16.f16  d, a-desc, b-desc, scale-d, imm-scale-a, imme-scale-b, imm-trans-a, imm-trans-b;
@@ -82,7 +80,7 @@ __global__ void work(half *A, half *B, half *C)
                 "1, 1, "
                 "0, 1;"
                : "+r"(c[0]), "+r"(c[1])
-               : "l"(a), "l"(desc_b)
+               : "l"(desc_a), "l"(desc_b)
                );
 
   asm volatile("wgmma.commit_group.sync.aligned; \n");
