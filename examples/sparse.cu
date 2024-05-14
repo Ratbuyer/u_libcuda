@@ -79,30 +79,21 @@ __global__ void work(half *A, half *B, half *C, u_int32_t *metadata_array)
 
   asm volatile("wgmma.fence.sync.aligned; \n");
 
-  // wgmma.mma_async.sp.sync.aligned.shape.dtype.f16.f16  d, a-desc, b-desc, sp-meta, sp-sel, scale-d, imm-scale-a, imm-scale-b, imm-trans-a, imm-trans-b;
-  // asm volatile("wgmma.mma_async.sp.sync.aligned.m64n8k32.f16.f16.f16"
-  //              "{%0, %1},"
-  //               "%2, %3,"
-  //               "0x4, 0x0"
-  //               "1,"
-  //               "1, 1,"
-  //               "0, 1;"
-  //              : "+r"(c[0]), "+r"(c[1])
-  //              : "l"(desc_a), "l"(desc_b)
-  //              );
-
-  uint32_t a;
-
-  asm volatile("wgmma.mma_async.sync.sp.aligned.m64n8k64.f16.f16.f16 "
-               "{%0, %1}, "
-                "%2, %3, "
-                "%4, %4,"
-                "0, "
-                "1, 1, "
-                "0, 0;"
+  asm volatile("wgmma.mma_async.sp.sync.aligned.m64n8k64.f16.f16.f16 "
+               "{%0, %1}, " // c
+               "%2, %3, "   // desc A, B
+               "%4, "       // meta
+               "%5, "       // thread selection
+               "%6, "       // scale D
+               "%7, %8, "   // +/- scale A, B
+               "%9, %10;"   // transpose A, B
                : "+r"(c[0]), "+r"(c[1])
-               : "l"(desc_a), "l"(desc_b), "n"(0)
-               );
+               : "l"(desc_a), "l"(desc_b),
+                 "r"(metadata),   // metadata
+                 "r"(0x0),        // thread selection
+                 "r"(1),          // scale D
+                 "n"(1), "n"(1),  // scale A, B
+                 "n"(0), "n"(1)); // transpose A, B
 
   asm volatile("wgmma.commit_group.sync.aligned; \n");
 
