@@ -8,6 +8,8 @@
 
 #include "../headers/device/descriptor.cuh"
 #include "../headers/host/matrix_utilities.cuh"
+#include "../headers/device/wgmma.cuh"
+#include "../headers/device/wgmma.sp.cuh"
 
 const int M = 64;
 const int N = 8;
@@ -94,6 +96,8 @@ __global__ void work(half *A, half *B, half *C, u_int32_t *metadata_array)
                  "r"(1),          // scale D
                  "n"(1), "n"(1),  // scale A, B
                  "n"(0), "n"(1)); // transpose A, B
+
+  wgmma_sp_async(c, desc_a, desc_b, metadata_array);
 
   asm volatile("wgmma.commit_group.sync.aligned; \n");
 
