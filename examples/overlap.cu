@@ -58,9 +58,9 @@ __global__ void tensor_core_work(int *result)
                  "0, 0;"
                  : "+r"(c[0]), "+r"(c[1])
                  : "l"(desc_a), "l"(desc_b));
-  }
 
-  asm volatile("wgmma.commit_group.sync.aligned; \n");
+    asm volatile("wgmma.commit_group.sync.aligned; \n");
+  }
 
   asm volatile("wgmma.wait_group.sync.aligned 0; \n");
 
