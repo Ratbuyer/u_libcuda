@@ -14,7 +14,7 @@
 const int threads_per_block = 32 * 4; // 4 warps
 const int blocks = 1;
 
-const int iteration = 1000000;
+const int iteration = 10000000;
 
 __global__ void cuda_core_work(int *result)
 {
