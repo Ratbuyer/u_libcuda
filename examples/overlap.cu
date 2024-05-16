@@ -14,7 +14,7 @@
 const int threads_per_block = 32 * 4; // 4 warps
 const int blocks = 1;
 
-const int iteration = 9999999;
+const int iteration = 1000000;
 
 __global__ void cuda_core_work(int *result)
 {
@@ -199,7 +199,7 @@ __global__ void overlap_v3(int *result)
 
     asm volatile("wgmma.commit_group.sync.aligned; \n");
 
-    for (int j = 0; j < fold - 1; j++) {
+    for (int j = 0; j < fold; j++) {
       sum = fma(1.0f, 1.0f, sum);
       sum = fma(1.1f, 1.1f, sum);
       sum = fma(1.2f, 1.2f, sum);
