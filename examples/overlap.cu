@@ -182,32 +182,34 @@ __global__ void overlap_v3(int *result)
 
   for (int i = 0; i < iteration / 2; i++)
   {
-    asm volatile("wgmma.mma_async.sync.aligned.m64n8k16.f16.f16.f16 "
-                 "{%0, %1}, "
-                 "%2, %3, "
-                 "1, "
-                 "1, 1, "
-                 "0, 0;"
-                 : "+r"(c[0]), "+r"(c[1])
-                 : "l"(desc_a), "l"(desc_b));
-
-    asm volatile("wgmma.commit_group.sync.aligned; \n");
-
-    asm volatile("wgmma.mma_async.sync.aligned.m64n8k16.f16.f16.f16 "
-                 "{%0, %1}, "
-                 "%2, %3, "
-                 "1, "
-                 "1, 1, "
-                 "0, 0;"
-                 : "+r"(c[0]), "+r"(c[1])
-                 : "l"(desc_a), "l"(desc_b));
-
-    asm volatile("wgmma.commit_group.sync.aligned; \n");
 
     sum = fma(1.0f, 1.0f, sum);
     sum = fma(1.1f, 1.1f, sum);
     sum = fma(1.2f, 1.2f, sum);
     sum = fma(1.3f, 1.3f, sum);
+
+    asm volatile("wgmma.mma_async.sync.aligned.m64n8k16.f16.f16.f16 "
+                 "{%0, %1}, "
+                 "%2, %3, "
+                 "1, "
+                 "1, 1, "
+                 "0, 0;"
+                 : "+r"(c[0]), "+r"(c[1])
+                 : "l"(desc_a), "l"(desc_b));
+
+    asm volatile("wgmma.commit_group.sync.aligned; \n");
+
+    asm volatile("wgmma.mma_async.sync.aligned.m64n8k16.f16.f16.f16 "
+                 "{%0, %1}, "
+                 "%2, %3, "
+                 "1, "
+                 "1, 1, "
+                 "0, 0;"
+                 : "+r"(c[0]), "+r"(c[1])
+                 : "l"(desc_a), "l"(desc_b));
+
+    asm volatile("wgmma.commit_group.sync.aligned; \n");
+
     sum = fma(1.0f, 1.0f, sum);
     sum = fma(1.1f, 1.1f, sum);
     sum = fma(1.2f, 1.2f, sum);
