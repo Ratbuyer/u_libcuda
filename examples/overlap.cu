@@ -199,8 +199,7 @@ __global__ void overlap_v3(int *result)
 
     asm volatile("wgmma.commit_group.sync.aligned; \n");
 
-    for (int j = 0; j < fold; j++)
-    {
+    for (int j = 0; j < fold - 1; j++) {
       sum = fma(1.0f, 1.0f, sum);
       sum = fma(1.1f, 1.1f, sum);
       sum = fma(1.2f, 1.2f, sum);
