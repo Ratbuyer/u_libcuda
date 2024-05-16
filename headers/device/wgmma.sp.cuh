@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 __device__ void wgmma_sp_async(
-    uint32_t *c, const uint64_t desc_a, const uint64_t desc_b, const uint32_t *metadata
+    uint32_t *c, const uint64_t desc_a, const uint64_t desc_b, const uint32_t metadata
 )
 {
   asm volatile("wgmma.mma_async.sp.sync.aligned.m64n8k64.f16.f16.f16 "

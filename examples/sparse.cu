@@ -97,7 +97,7 @@ __global__ void work(half *A, half *B, half *C, u_int32_t *metadata_array)
                  "n"(1), "n"(1),  // scale A, B
                  "n"(0), "n"(1)); // transpose A, B
 
-  wgmma_sp_async(c, desc_a, desc_b, metadata_array);
+  // wgmma_sp_async(c, desc_a, desc_b, metadata);
 
   asm volatile("wgmma.commit_group.sync.aligned; \n");
 
