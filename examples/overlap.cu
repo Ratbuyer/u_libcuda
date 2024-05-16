@@ -195,10 +195,7 @@ __global__ void overlap_v3(int *result)
 
     sum = fma(1.0f, 1.0f, sum);
     sum = fma(1.1f, 1.1f, sum);
-    sum = fma(1.2f, 1.2f, sum);
-    sum = fma(1.3f, 1.3f, sum);
 
-    asm volatile("wgmma.wait_group.sync.aligned 1; \n");
   }
 
   asm volatile("wgmma.wait_group.sync.aligned 0; \n");
