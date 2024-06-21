@@ -81,25 +81,7 @@ __global__ void work(half *A, half *B, half *C, u_int32_t *metadata_array)
 
   asm volatile("wgmma.fence.sync.aligned; \n");
 
-  asm volatile(".reg .pred p;\n");
-
-  asm volatile("wgmma.mma_async.sp.sync.aligned.m64n8k64.f16.f16.f16 "
-               "{%0, %1}, "
-               "%2, %3, "
-               "%4, "     // meta
-               "0x0, "    // thread selection
-               "p, "      // scale D
-               "%7, %8, " // +/- scale A, B
-               "%9, %10;" // transpose A, B
-               : "+r"(c[0]), "+r"(c[1])
-               : "l"(desc_a), "l"(desc_b),
-                 "r"(metadata),
-                 "r"(0x0),
-                 "r"(1), // scale D
-                 "n"(1), "n"(1),
-                 "n"(0), "n"(1));
-
-  // wgmma_sp_async(c, desc_a, desc_b, metadata);
+  wgmma_sp_async(c, desc_a, desc_b, metadata);
 
   asm volatile("wgmma.commit_group.sync.aligned; \n");
 

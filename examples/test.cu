@@ -6,8 +6,8 @@ __global__ void kernel()
   uint64_t desc_b = 0;
   int32_t metaE = 0;
   int32_t scaleD = 0;
-  const int32_t scaleA = 0;
-  const int32_t scaleB = 0;
+  const int32_t scaleA = 1;
+  const int32_t scaleB = 1;
   const int32_t tnspA = 0;
   const int32_t tnspB = 0;
 
@@ -17,7 +17,7 @@ __global__ void kernel()
       "{\n"
       ".reg .pred p;\n"
       "setp.ne.b32 p, %68, 0;\n"
-      "wgmma.mma_async.sp.aligned.m64n256k32.f16.f16.f16 "
+      "wgmma.mma_async.sp.sync.aligned.m64n256k32.f16.f16.f16 "
       "{%0, %1, %2, %3, %4, %5, %6, %7, "
       "%8, %9, %10, %11, %12, %13, %14, %15, "
       "%16, %17, %18, %19, %20, %21, %22, %23, "
