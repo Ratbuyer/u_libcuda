@@ -12,7 +12,7 @@
 
 const int M = 512;
 const int N = 512;
-const int K = 512;
+const int K = 32;
 
 const int M2 = 64;
 const int N2 = 8;
