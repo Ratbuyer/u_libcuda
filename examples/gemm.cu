@@ -10,9 +10,9 @@
 #include "../headers/device/descriptor.cuh"
 #include "../headers/host/matrix_utilities.cuh"
 
-const int M = 1024;
-const int N = 128;
-const int K = 1024;
+const int M = 512;
+const int N = 512;
+const int K = 512;
 
 const int M2 = 64;
 const int N2 = 8;
@@ -129,11 +129,8 @@ int main()
   half h_A[M * K];
   half h_B[K * N];
 
-  // fill_random(h_A, M, K);
-  // fill_random(h_B, K, N);
-
-  fill_fixed(h_A, M, K, 0.1);
-  fill_fixed(h_B, K, N, 0.2);
+  fill_random(h_A, M, K);
+  fill_random(h_B, K, N);
 
   // for (int i = 0; i < M * N; i++)
   // {
