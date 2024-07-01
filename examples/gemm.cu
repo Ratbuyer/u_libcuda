@@ -129,8 +129,8 @@ int main()
   half h_A[M * K];
   half h_B[K * N];
 
-  fill_fixed(h_A, M, K, 1.0f);
-  fill_fixed(h_B, K, N, 1.0f);
+  fill_random(h_A, M, K);
+  fill_random(h_B, K, N);
 
   // for (int i = 0; i < M * N; i++)
   // {

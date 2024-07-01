@@ -1,6 +1,9 @@
 sm_version=90a
 NVCC=nvcc
 
+all:
+	make gemm
+	make run
 
 sparse:
 	${NVCC} -arch=sm_${sm_version} -O0 examples/sparse.cu -lcudart -lcuda -o bins/bin
@@ -20,9 +23,6 @@ gemm:
 
 
 
-
-bin:
-	${NVCC} -arch=sm_${sm_version} -O0 bin.ptx -cubin -o bins/bin
 
 run:
 	./bins/bin
