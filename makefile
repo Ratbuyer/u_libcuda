@@ -14,6 +14,13 @@ dense:
 test:
 	${NVCC} -arch=sm_${sm_version} -O0 examples/test.cu -lcudart -lcuda -o bins/bin
 
+gemm:
+	${NVCC} -arch=sm_${sm_version} -O0 examples/gemm.cu -lcudart -lcuda -o bins/bin
+
+
+
+
+
 bin:
 	${NVCC} -arch=sm_${sm_version} -O0 bin.ptx -cubin -o bins/bin
 
