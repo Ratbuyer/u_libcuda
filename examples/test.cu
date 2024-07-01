@@ -1,58 +1,57 @@
-#include <stdint.h>
+#include <cuda/barrier>
+using barrier = cuda::barrier<cuda::thread_scope_block>;
+namespace cde = cuda::device::experimental;
 
-__global__ void kernel()
+static constexpr size_t buf_len = 1024;
+__global__ void add_one_kernel(int* data, size_t offset)
 {
-  uint64_t desc_a = 0;
-  uint64_t desc_b = 0;
-  int32_t metaE = 0;
-  int32_t scaleD = 0;
-  const int32_t scaleA = 1;
-  const int32_t scaleB = 1;
-  const int32_t tnspA = 0;
-  const int32_t tnspB = 0;
+  // Shared memory buffers for x and y. The destination shared memory buffer of
+  // a bulk operations should be 16 byte aligned.
+  __shared__ alignas(16) int smem_data[buf_len];
 
-  int32_t reg = 0;
+  // 1. a) Initialize shared memory barrier with the number of threads participating in the barrier.
+  //    b) Make initialized barrier visible in async proxy.
+  #pragma nv_diag_suppress static_var_with_dynamic_init
+  __shared__ barrier bar;
+  if (threadIdx.x == 0) { 
+    init(&bar, blockDim.x);                // a)
+    cde::fence_proxy_async_shared_cta();   // b)
+  }
+  __syncthreads();
 
-  asm volatile(
-      "{\n"
-      ".reg .pred p;\n"
-      "setp.ne.b32 p, %68, 0;\n"
-      "wgmma.mma_async.sp.sync.aligned.m64n256k32.f16.f16.f16 "
-      "{%0, %1, %2, %3, %4, %5, %6, %7, "
-      "%8, %9, %10, %11, %12, %13, %14, %15, "
-      "%16, %17, %18, %19, %20, %21, %22, %23, "
-      "%24, %25, %26, %27, %28, %29, %30, %31, "
-      "%32, %33, %34, %35, %36, %37, %38, %39, "
-      "%40, %41, %42, %43, %44, %45, %46, %47, "
-      "%48, %49, %50, %51, %52, %53, %54, %55, "
-      "%56, %57, %58, %59, %60, %61, %62, %63},"
-      "%64,"
-      "%65,"
-      "%66,"
-      "0x0,"
-      "p, %69, %70, %71, %72;\n"
-      "}\n"
-      : "+r"(reg), "+r"(reg), "+r"(reg), "+r"(reg),
-        "+r"(reg), "+r"(reg), "+r"(reg), "+r"(reg),
-        "+r"(reg), "+r"(reg), "+r"(reg), "+r"(reg),
-        "+r"(reg), "+r"(reg), "+r"(reg), "+r"(reg),
-        "+r"(reg), "+r"(reg), "+r"(reg), "+r"(reg),
-        "+r"(reg), "+r"(reg), "+r"(reg), "+r"(reg),
-        "+r"(reg), "+r"(reg), "+r"(reg), "+r"(reg),
-        "+r"(reg), "+r"(reg), "+r"(reg), "+r"(reg),
-        "+r"(reg), "+r"(reg), "+r"(reg), "+r"(reg),
-        "+r"(reg), "+r"(reg), "+r"(reg), "+r"(reg),
-        "+r"(reg), "+r"(reg), "+r"(reg), "+r"(reg),
-        "+r"(reg), "+r"(reg), "+r"(reg), "+r"(reg),
-        "+r"(reg), "+r"(reg), "+r"(reg), "+r"(reg),
-        "+r"(reg), "+r"(reg), "+r"(reg), "+r"(reg),
-        "+r"(reg), "+r"(reg), "+r"(reg), "+r"(reg),
-        "+r"(reg), "+r"(reg), "+r"(reg), "+r"(reg)
-      : "l"(desc_a),
-        "l"(desc_b),
-        "r"(metaE),
-        "r"(0x0),
-        "r"(int32_t(scaleD)), "n"(int32_t(scaleA)), "n"(int32_t(scaleB)), "n"(int32_t(tnspA)), "n"(int32_t(tnspB)));
+  // 2. Initiate TMA transfer to copy global to shared memory.
+  barrier::arrival_token token;
+  if (threadIdx.x == 0) {
+    cde::cp_async_bulk_global_to_shared(smem_data, data + offset, sizeof(smem_data), bar);
+    // 3a. Arrive on the barrier and tell how many bytes are expected to come in (the transaction count)
+    token = cuda::device::barrier_arrive_tx(bar, 1, sizeof(smem_data));
+  } else {
+    // 3b. Rest of threads just arrive
+    token = bar.arrive();
+  }
+
+  // 3c. Wait for the data to have arrived.
+  bar.wait(std::move(token));
+
+  // 4. Compute saxpy and write back to shared memory
+  for (int i = threadIdx.x; i < buf_len; i += blockDim.x) {
+    smem_data[i] += 1;
+  }
+
+  // 5. Wait for shared memory writes to be visible to TMA engine.
+  cde::fence_proxy_async_shared_cta();
+  __syncthreads();
+  // After syncthreads, writes by all threads are visible to TMA engine.
+
+  // 6. Initiate TMA transfer to copy shared memory to global memory
+  if (threadIdx.x == 0) {
+    cde::cp_async_bulk_shared_to_global(data + offset, smem_data, sizeof(smem_data));
+    // 7. Wait for TMA transfer to have finished reading shared memory.
+    // Create a "bulk async-group" out of the previous bulk copy operation.
+    cde::cp_async_bulk_commit_group();
+    // Wait for the group to have completed reading from shared memory.
+    cde::cp_async_bulk_wait_group_read<0>();
+  }
 }
 
 int main()
