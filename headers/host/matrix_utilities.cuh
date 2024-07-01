@@ -33,7 +33,7 @@ void fill_random(half *matrix, int rows, int cols)
   {
     for (int j = 0; j < cols; j++)
     {
-      float value = 5.0f * rand() / RAND_MAX;
+      float value = 0.01f * rand() / RAND_MAX;
       matrix[i * cols + j] = __float2half(value);
     }
   }
