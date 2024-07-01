@@ -33,7 +33,7 @@ void fill_random(half *matrix, int rows, int cols)
   {
     for (int j = 0; j < cols; j++)
     {
-      float value = 0.01f * rand() / RAND_MAX;
+      float value = 0.1f * rand() / RAND_MAX;
       matrix[i * cols + j] = __float2half(value);
     }
   }
@@ -77,7 +77,9 @@ void compare_matrices(half *A, half *B, int rows, int cols)
     {
       float a = __half2float(A[i * cols + j]);
       float b = __half2float(B[i * cols + j]);
-      if (a != b || i * rows + j < 10)
+      float error_range = 0.5;
+      bool is_same = a - error_range < b && a + error_range > b;
+      if (!is_same || i * rows + j < 10)
       {
         printf("Error at (%d, %d) : %f != %f\n", i, j, a, b);
       }

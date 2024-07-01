@@ -11,8 +11,8 @@
 #include "../headers/host/matrix_utilities.cuh"
 
 const int M = 128;
-const int N = 8;
-const int K = 16;
+const int N = 16;
+const int K = 32;
 
 const int M2 = 64;
 const int N2 = 8;
