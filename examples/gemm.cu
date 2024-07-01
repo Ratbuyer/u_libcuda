@@ -33,7 +33,7 @@ __global__ void gemm(half *A, half *B, half *C)
 
   uint32_t c[2] = {};
 
-  for (int k2 = 0; k2 < K / K2; k2++)
+  for (int k_step = 0; k_step < K / K2; k_step++)
   {
 
     __align__(16) __shared__ half A_shared[M2 * K2];
@@ -52,13 +52,13 @@ __global__ void gemm(half *A, half *B, half *C)
           int block_col = j % 8;
           int block_id = block_x * 2 + block_y;
           int offset = block_id * 64 + block_row * 8 + block_col;
-          A_shared[offset] = A[(block_id_m * 64 + i) * K + j];
+          A_shared[offset] = A[(block_id_m * M2 + i) * K + k_step * K2 + j];
         }
       }
 
-      for (int i = 0; i < K; i++)
+      for (int i = 0; i < K2; i++)
       {
-        for (int j = 0; j < N; j++)
+        for (int j = 0; j < N2; j++)
         {
           int block_x = i / 8;
           int block_row = i % 8;
@@ -66,7 +66,7 @@ __global__ void gemm(half *A, half *B, half *C)
           int block_col = j % 8;
           int block_id = block_x * 1 + block_y;
           int offset = block_id * 64 + block_row * 8 + block_col;
-          B_shared[offset] = B[i * N + j];
+          B_shared[offset] = B[(k_step * K2 + i) * N + block_id_n * N2 + j];
         }
       }
     }
@@ -100,8 +100,11 @@ __global__ void gemm(half *A, half *B, half *C)
 
   uint32_t *C_ptr = reinterpret_cast<uint32_t *>(C);
 
-  int offset1 = warp_id * 16 * 4 + group_id * 4 + lane_in_group;
-  int offset2 = warp_id * 16 * 4 + (group_id + 8) * 4 + lane_in_group;
+  // int offset1 = warp_id * 16 * 4 + group_id * 4 + lane_in_group;
+  // int offset2 = warp_id * 16 * 4 + (group_id + 8) * 4 + lane_in_group;
+
+  int offset1 = block_id_m * M2 * N + warp_id * 16 * N + group_id * N + block_id_n * N2 + lane_in_group;
+  int offset2 = block_id_m * M2 * N + warp_id * 16 * N + (group_id + 8) * N + block_id_n * N2 + lane_in_group;
 
   // if (offset1 > 32 * 4) {
   //   // printf("offset: %d\n", offset1);
