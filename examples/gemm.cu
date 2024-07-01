@@ -33,11 +33,11 @@ __global__ void gemm(half *A, half *B, half *C)
 
   uint32_t c[2] = {};
 
+  __align__(16) __shared__ half A_shared[M2 * K2];
+  __align__(16) __shared__ half B_shared[K2 * N2];
+
   for (int k_step = 0; k_step < K / K2; k_step++)
   {
-
-    __align__(16) __shared__ half A_shared[M2 * K2];
-    __align__(16) __shared__ half B_shared[K2 * N2];
 
     // 8x8 core blocks
     if (tid == 0)
