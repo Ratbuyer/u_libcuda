@@ -100,11 +100,11 @@ __global__ void gemm(half *A, half *B, half *C)
 
   uint32_t *C_ptr = reinterpret_cast<uint32_t *>(C);
 
-  // int offset1 = warp_id * 16 * 4 + group_id * 4 + lane_in_group;
-  // int offset2 = warp_id * 16 * 4 + (group_id + 8) * 4 + lane_in_group;
+  int offset1 = warp_id * 16 * 4 + group_id * 4 + lane_in_group;
+  int offset2 = warp_id * 16 * 4 + (group_id + 8) * 4 + lane_in_group;
 
-  int offset1 = block_id_m * M2 * N + warp_id * 16 * N + group_id * N + block_id_n * N2 + lane_in_group;
-  int offset2 = block_id_m * M2 * N + warp_id * 16 * N + (group_id + 8) * N + block_id_n * N2 + lane_in_group;
+  // int offset1 = block_id_m * M2 * N + warp_id * 16 * N + group_id * N + block_id_n * N2 + lane_in_group;
+  // int offset2 = block_id_m * M2 * N + warp_id * 16 * N + (group_id + 8) * N + block_id_n * N2 + lane_in_group;
 
   // if (offset1 > 32 * 4) {
   //   // printf("offset: %d\n", offset1);
