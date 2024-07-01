@@ -10,9 +10,9 @@
 #include "../headers/device/descriptor.cuh"
 #include "../headers/host/matrix_utilities.cuh"
 
-const int M = 512;
-const int N = 512;
-const int K = 512;
+const int M = 64;
+const int N = 8;
+const int K = 16;
 
 const int M2 = 64;
 const int N2 = 8;
