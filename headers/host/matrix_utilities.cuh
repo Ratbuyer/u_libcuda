@@ -77,7 +77,7 @@ void compare_matrices(half *A, half *B, int rows, int cols)
     {
       float a = __half2float(A[i * cols + j]);
       float b = __half2float(B[i * cols + j]);
-      float error_range = 0.05;
+      float error_range = 0.01;
       bool is_same = a - error_range < b && a + error_range > b;
       if (!is_same || i * rows + j < 10)
       {
