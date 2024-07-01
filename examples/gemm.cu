@@ -39,7 +39,6 @@ __global__ void gemm(half *A, half *B, half *C)
   for (int k_step = 0; k_step < K / K2; k_step++)
   {
 
-    // 8x8 core blocks
     if (tid == 0)
     {
       for (int i = 0; i < M2; i++)
@@ -78,12 +77,10 @@ __global__ void gemm(half *A, half *B, half *C)
 
     asm volatile("wgmma.fence.sync.aligned; \n");
 
-    // wgmma.mma_async.sync.aligned.shape.dtype.f16.f16  d, a-desc, b-desc, scale-d, imm-scale-a, imme-scale-b, imm-trans-a, imm-trans-b;
-    // wgmma.mma_async.sync.aligned.shape.dtype.f16.f16  d, a, b-desc, scale-d, imm-scale-a, imme-scale-b, imm-trans-b;
     asm volatile("wgmma.mma_async.sync.aligned.m64n8k16.f16.f16.f16 "
-                 "{%0, %1}, " // d
+                 "{%0, %1}, " // c
                  "%2, %3, "   // a, b
-                 "1, "        // scale_d
+                 "1, "        // scale_c
                  "1, 1, "     // + or - a, b
                  "0, 1;"      // trans a, trans b
                  : "+r"(c[0]), "+r"(c[1])
@@ -98,19 +95,11 @@ __global__ void gemm(half *A, half *B, half *C)
     asm volatile("wgmma.fence.sync.aligned; \n");
   }
 
+  // store back to c
   uint32_t *C_ptr = reinterpret_cast<uint32_t *>(C);
-
-  // int offset1 = warp_id * 16 * 4 + group_id * 4 + lane_in_group;
-  // int offset2 = warp_id * 16 * 4 + (group_id + 8) * 4 + lane_in_group;
 
   int offset1 = block_id_m * M2 * (N/2) + warp_id * 16 * (N/2) + group_id * (N/2) + block_id_n * (N2/2) + lane_in_group;
   int offset2 = block_id_m * M2 * (N/2) + warp_id * 16 * (N/2) + (group_id + 8) * (N/2) + block_id_n * (N2/2) + lane_in_group;
-
-  // if (offset1 > 32 * 4) {
-  //   // printf("offset: %d\n", offset1);
-  //   half * c_half_ptr = reinterpret_cast<half *>(c);
-  //   printf("c : %f\n", __half2float(c_half_ptr[0]));
-  // }
 
   C_ptr[offset1] = c[0];
   C_ptr[offset2] = c[1];
